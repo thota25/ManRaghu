@@ -13,6 +13,15 @@ pipeline {
             }
         }
 
+        stage("SonarQube analysis") {
+            agent any 
+            steps {
+                withSonarQubeEnv('Sonar') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
         stage('Push') {
             steps {
                 echo 'Push'

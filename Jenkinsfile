@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'master'}
 
     environment {
         function_name = 'java-sample'
@@ -16,36 +16,36 @@ pipeline {
         }
 
 
-        stage("SonarQube analysis") {
-            agent any
+        // stage("SonarQube analysis") {
+        //     agent any
 
-            when {
-                anyOf {
-                    branch 'feature/*'
-                    branch 'main'
-                }
-            }
-            steps {
-                withSonarQubeEnv('Sonar') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
+        //     when {
+        //         anyOf {
+        //             branch 'feature/*'
+        //             branch 'main'
+        //         }
+        //     }
+        //     steps {
+        //         withSonarQubeEnv('Sonar') {
+        //             sh 'mvn sonar:sonar'
+        //         }
+        //     }
+        // }
 
-        stage("Quality Gate") {
-            steps {
-                script {
-                    try {
-                        timeout(time: 10, unit: 'MINUTES') {
-                            waitForQualityGate abortPipeline: true
-                        }
-                    }
-                    catch (Exception ex) {
+        // stage("Quality Gate") {
+        //     steps {
+        //         script {
+        //             try {
+        //                 timeout(time: 10, unit: 'MINUTES') {
+        //                     waitForQualityGate abortPipeline: true
+        //                 }
+        //             }
+        //             catch (Exception ex) {
 
-                    }
-                }
-            }
-        }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Push') {
             steps {
@@ -83,9 +83,45 @@ pipeline {
             }
         }
 
+        stage('Deploy to Prod') {
+            when {
+                branch 'main'
+            }
+            steps {
+               input (
+                    message: 'Are we good for Prod Deployment ?'
+               )
+            }
+        }
+
+        stage('Release to Prod') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh "aws lambda update-function-code --function-name $function_name --region us-east-1 --s3-bucket bermtecbatch31 --s3-key sample-1.0.3.jar"
+            }
+        }
+
 
         
 
         // CD Ended
+    }
+
+    post {
+        always {
+            echo "${env.BUILD_ID}"
+            echo "${BRANCH_NAME}"
+            echo "${BUILD_NUMBER}"
+
+        }
+
+        failure {
+            echo 'failed'
+        }
+        aborted {
+            echo 'aborted'
+        }
     }
 }

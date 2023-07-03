@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'master'}
 
     environment {
         function_name = 'java-sample'

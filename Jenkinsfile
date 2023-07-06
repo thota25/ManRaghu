@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-  environment {
+    environment {
         function_name = 'java010101'
     }
 
@@ -86,6 +86,6 @@ pipeline {
 
         
 
-        // CD Ended
-    }
+        // CD Ended
+    }
 }

@@ -1,8 +1,8 @@
 pipeline {
-    agent { label 'master'}
+    agent any
 
     environment {
-        function_name = 'java-sample'
+        function_name = 'java010101'
     }
 
     stages {
@@ -16,42 +16,42 @@ pipeline {
         }
 
 
-        // stage("SonarQube analysis") {
-        //     agent any
+        stage("SonarQube analysis") {
+            agent any
 
-        //     when {
-        //         anyOf {
-        //             branch 'feature/*'
-        //             branch 'main'
-        //         }
-        //     }
-        //     steps {
-        //         withSonarQubeEnv('Sonar') {
-        //             sh 'mvn sonar:sonar'
-        //         }
-        //     }
-        // }
+            when {
+                anyOf {
+                    branch 'feature/*'
+                    branch 'main'
+                }
+            }
+            steps {
+                withSonarQubeEnv('Sonar') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
 
-        // stage("Quality Gate") {
-        //     steps {
-        //         script {
-        //             try {
-        //                 timeout(time: 10, unit: 'MINUTES') {
-        //                     waitForQualityGate abortPipeline: true
-        //                 }
-        //             }
-        //             catch (Exception ex) {
+        stage("Quality Gate") {
+            steps {
+                script {
+                    try {
+                        timeout(time: 10, unit: 'MINUTES') {
+                            waitForQualityGate abortPipeline: true
+                        }
+                    }
+                    catch (Exception ex) {
 
-        //             }
-        //         }
-        //     }
-        // }
+                    }
+                }
+            }
+        }
 
         stage('Push') {
             steps {
                 echo 'Push'
 
-                sh "aws s3 cp target/sample-1.0.3.jar s3://bermtecbatch31"
+              //  sh "aws s3 cp target/sample-1.0.3.jar s3://bermtecbatch31"
             }
         }
 
@@ -66,7 +66,7 @@ pipeline {
                     steps {
                         echo 'Build'
 
-                        sh "aws lambda update-function-code --function-name $function_name --region us-east-1 --s3-bucket bermtecbatch31 --s3-key sample-1.0.3.jar"
+                        //sh "aws lambda update-function-code --function-name $function_name --region us-east-1 --s3-bucket bermtecbatch31 --s3-key sample-1.0.3.jar"
                     }
                 }
 
@@ -83,45 +83,9 @@ pipeline {
             }
         }
 
-        stage('Deploy to Prod') {
-            when {
-                branch 'main'
-            }
-            steps {
-               input (
-                    message: 'Are we good for Prod Deployment ?'
-               )
-            }
-        }
-
-        stage('Release to Prod') {
-            when {
-                branch 'main'
-            }
-            steps {
-                sh "aws lambda update-function-code --function-name $function_name --region us-east-1 --s3-bucket bermtecbatch31 --s3-key sample-1.0.3.jar"
-            }
-        }
-
 
         
 
-        // CD Ended
-    }
-
-    post {
-        always {
-            echo "${env.BUILD_ID}"
-            echo "${BRANCH_NAME}"
-            echo "${BUILD_NUMBER}"
-
-        }
-
-        failure {
-            echo 'failed'
-        }
-        aborted {
-            echo 'aborted'
-        }
-    }
+        // CD Ended
+    }
 }
